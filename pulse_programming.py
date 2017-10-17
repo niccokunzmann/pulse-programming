@@ -27,11 +27,35 @@ for cls in code:
     counts[cls] += 1
 max_class = max(range(NUMBER_OF_COLORS), key=lambda i:counts[i])
 classified_image = np.array(
-    [[col == max_class for col in row]
+    [[255 * (col != max_class) for col in row]
      for row in reshaped_code],
     np.uint8)
 
 print("Eroding image to one pixel lines.")
+# from http://felix.abecassis.me/2011/09/opencv-morphological-skeleton/
+# from https://stackoverflow.com/questions/30045166/thinnig-of-a-binary-image-python
+skel = np.zeros((len(classified_image), len(classified_image[0])), np.uint8)
+temp = np.zeros((len(classified_image), len(classified_image[0])), np.uint8)
+element0 = cv2.getStructuringElement(cv2.MORPH_CROSS, (3, 3))
+element1 = np.array([[0,0,0], [1,1,1], [0,0,0]], np.uint8)
+element2 = np.array([[0,1,0], [0,1,0], [0,1,0]], np.uint8)
+element3 = np.array([[1,0,0], [0,1,0], [0,0,1]], np.uint8)
+element4 = np.array([[0,0,1], [0,1,0], [1,0,0]], np.uint8)
+img = cv2.dilate(classified_image, element0, iterations=0)
+
+done = False
+while not done:
+    for element in (element1, element2):
+        eroded = cv2.erode(img,element)
+        temp = cv2.dilate(eroded, element)
+        temp = cv2.subtract(img,temp)
+        skel = cv2.bitwise_or(skel,temp)
+        img = eroded
+        zeros = cv2.countNonZero(img)
+        print(zeros)
+        if zeros == 0:
+            done = True
+            break
 
 
 print("classes", set(classified_image.flatten()))
@@ -41,5 +65,5 @@ print("classified_image", classified_image)
 
 cv2.namedWindow("W1", cv2.WINDOW_AUTOSIZE)
 cv2.imshow("W1", image)
-cv2.imshow("W1", classified_image)
+cv2.imshow("W1", skel)
 cv2.waitKey(0)
