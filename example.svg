@@ -17,7 +17,7 @@
    inkscape:export-filename="/home/user/pulse-programming/example.png"
    inkscape:export-xdpi="90"
    inkscape:export-ydpi="90"
-   sodipodi:docname="New document 1">
+   sodipodi:docname="example.svg">
   <defs
      id="defs4" />
   <sodipodi:namedview
@@ -28,15 +28,15 @@
      inkscape:pageopacity="0.0"
      inkscape:pageshadow="2"
      inkscape:zoom="0.7"
-     inkscape:cx="167.57869"
-     inkscape:cy="629.70221"
+     inkscape:cx="470.10285"
+     inkscape:cy="472.93394"
      inkscape:document-units="px"
      inkscape:current-layer="layer1"
      showgrid="false"
-     inkscape:window-width="871"
-     inkscape:window-height="685"
-     inkscape:window-x="335"
-     inkscape:window-y="142"
+     inkscape:window-width="1244"
+     inkscape:window-height="826"
+     inkscape:window-x="164"
+     inkscape:window-y="105"
      inkscape:window-maximized="0" />
   <metadata
      id="metadata7">
@@ -55,29 +55,32 @@
      inkscape:groupmode="layer"
      id="layer1">
     <path
-       style="fill:none;stroke:#008000;stroke-width:20;stroke-linecap:butt;stroke-linejoin:round;stroke-opacity:1;stroke-miterlimit:4;stroke-dasharray:none"
-       d="M 230.31478,228.07771 C 420.22346,438.18944 480.83261,70.49391 472.75139,304.8493 464.67017,539.20469 165.66502,438.18944 165.66502,438.18944"
-       id="path2985"
-       inkscape:connector-curvature="0" />
-    <path
+       style="fill:none;stroke:#afe9af;stroke-width:20;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1;stroke-miterlimit:4;stroke-dasharray:none"
+       d="M 165.71429,70.933611 C 167.14286,316.6479 410,278.07647 410,278.07647 l -1.42857,192.85714"
+       id="path3801"
        inkscape:connector-curvature="0"
-       id="path3755"
-       d="M 154.60049,529.50628 C 344.50917,739.61801 405.11832,371.92248 397.0371,606.27787 388.95588,840.63326 89.950734,739.61801 89.950734,739.61801"
-       style="fill:none;stroke:#aa0000;stroke-width:20;stroke-linecap:butt;stroke-linejoin:round;stroke-miterlimit:4;stroke-opacity:1;stroke-dasharray:none" />
+       inkscape:export-xdpi="90"
+       inkscape:export-ydpi="90" />
     <path
-       style="fill:none;stroke:#550000;stroke-width:20;stroke-linecap:butt;stroke-linejoin:round;stroke-miterlimit:4;stroke-opacity:1;stroke-dasharray:none"
-       d="M 150.31478,476.64914 C 340.22346,686.76087 400.83261,319.06534 392.75139,553.42073 384.67017,787.77612 85.66502,686.76087 85.66502,686.76087"
-       id="path3757"
-       inkscape:connector-curvature="0" />
-    <path
+       style="fill:none;stroke:#008033;stroke-width:20;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1;stroke-miterlimit:4;stroke-dasharray:none"
+       d="m 125.71429,336.6479 282.85714,130 198.57143,1.42857"
+       id="path3803"
        inkscape:connector-curvature="0"
-       id="path3759"
-       d="M 98.886209,358.07771 C 288.79489,568.18944 349.40404,200.49391 341.32282,434.8493 333.2416,669.20469 34.236449,568.18944 34.236449,568.18944"
-       style="fill:none;stroke:#ffaaaa;stroke-width:20;stroke-linecap:butt;stroke-linejoin:round;stroke-miterlimit:4;stroke-opacity:1;stroke-dasharray:none" />
+       inkscape:export-filename="/home/user/pulse-programming/path3801.png"
+       inkscape:export-xdpi="90"
+       inkscape:export-ydpi="90" />
     <path
-       style="fill:none;stroke:#ffd5d5;stroke-width:20;stroke-linecap:butt;stroke-linejoin:round;stroke-miterlimit:4;stroke-opacity:1;stroke-dasharray:none"
-       d="M 98.886209,259.50628 C 288.79489,469.61801 349.40404,101.92248 341.32282,336.27787 333.2416,570.63326 34.236449,469.61801 34.236449,469.61801"
-       id="path3761"
+       style="fill:none;stroke:#2a2aff;stroke-width:20;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1;stroke-miterlimit:4;stroke-dasharray:none"
+       d="m 407.14286,465.21933 -1.42857,177.14285 112.85714,-1.42857 4.28571,107.14286 114.28572,4.28571 4.28571,-90 72.85714,2.85715 -12.85714,161.42857"
+       id="path3805"
+       inkscape:connector-curvature="0"
+       inkscape:export-filename="/home/user/pulse-programming/path3801.png"
+       inkscape:export-xdpi="90"
+       inkscape:export-ydpi="90" />
+    <path
+       style="fill:none;stroke:#ffccaa;stroke-width:20;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1;stroke-miterlimit:4;stroke-dasharray:none"
+       d="M 680,668.07647 628.57143,295.21933 470,318.07647 l 0,152.85714"
+       id="path3807"
        inkscape:connector-curvature="0" />
   </g>
 </svg>
