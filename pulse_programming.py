@@ -3,28 +3,31 @@ import numpy as np
 import cv2
 import scipy.cluster.vq as vq
 
-NUMBER_OF_COLORS = 3
-NUMBER_OF_COLORS += 1 # add background color
+codebook_raw = [[0,0,0], [255, 255, 255], [255,0,0], [0,255,0], [0,0,255]]
+NUMBER_OF_COLORS = len(codebook_raw)
 
 image = cv2.imread("pathxxx.png")
 DIMENSIONS = (len(image), len(image[0]))
 
 image = cv2.GaussianBlur(image, (5, 5), 0)
-codebook_raw = [[50,50,50], [150,150,150], [50,0,0], [0,50,0], [0,0,50]]
 flat_colors = image.reshape((-1, 3))
 whitened = vq.whiten(np.concatenate((flat_colors, np.array(codebook_raw, np.uint8))))
-codebook = whitened[len(flat_colors):]
+codebook, distortion = vq.kmeans(whitened, NUMBER_OF_COLORS)
 print("codebook", codebook)
 all_features = whitened[:len(flat_colors)]
+codebook_features = whitened[len(flat_colors):]
 code, distance = vq.vq(all_features, codebook)
+codebook_classification, distance = vq.vq(codebook_features, codebook)
 
 reshaped_code = code.reshape(DIMENSIONS)
 print("Assuming background has biggest area.")
-background_class = 1
-road_source_class = 3 # 0
-bridge_source_class =  3
-pulse_source_class = 2
-pump_source_class = 4
+
+background_class = codebook_classification[1]
+road_source_class = codebook_classification[0]
+bridge_source_class = codebook_classification[3]
+pulse_source_class = codebook_classification[2]
+pump_source_class = codebook_classification[4]
+
 road_image = np.array(
     [[255 * (col == road_source_class) for col in row]
      for row in reshaped_code],
