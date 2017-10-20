@@ -41,21 +41,23 @@ element1 = np.array([[0,0,0], [1,1,1], [0,0,0]], np.uint8)
 element2 = np.array([[0,1,0], [0,1,0], [0,1,0]], np.uint8)
 element3 = np.array([[1,0,0], [0,1,0], [0,0,1]], np.uint8)
 element4 = np.array([[0,0,1], [0,1,0], [1,0,0]], np.uint8)
-img = cv2.dilate(classified_image, element0, iterations=0)
+element5 = np.array([[1,1,1], [1,1,0], [0,0,0]], np.uint8)
+element6 = np.array([[0,1,0], [1,1,1], [0,1,0]], np.uint8)
+element = np.array([[0,0,0], [0,0,1], [0,1,1]], np.uint8)
 
+img = cv2.erode(classified_image, element, iterations=0)
 done = False
-while not done:
-    for element in (element1, element2):
-        eroded = cv2.erode(img,element)
-        temp = cv2.dilate(eroded, element)
-        temp = cv2.subtract(img,temp)
-        skel = cv2.bitwise_or(skel,temp)
-        img = eroded
-        zeros = cv2.countNonZero(img)
-        print(zeros)
-        if zeros == 0:
-            done = True
-            break
+for i in range(20):
+    eroded = cv2.erode(img, element)
+    dilated = cv2.dilate(eroded, element)
+    temp = cv2.subtract(img,dilated)
+    skel = cv2.bitwise_or(skel,temp)
+    img = skel#eroded
+    zeros = cv2.countNonZero(img)
+    print(zeros)
+    if zeros == 0:
+        done = True
+        break
 
 
 print("classes", set(classified_image.flatten()))
@@ -64,6 +66,5 @@ print("classified_image", classified_image)
 
 
 cv2.namedWindow("W1", cv2.WINDOW_AUTOSIZE)
-cv2.imshow("W1", image)
 cv2.imshow("W1", skel)
 cv2.waitKey(0)
