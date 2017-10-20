@@ -53,30 +53,31 @@ cv2.imshow("pulse_source_image", pulse_source_image)
 pulse0 = zeros = np.zeros(DIMENSIONS, np.uint8)
 pulse1 = np.zeros(DIMENSIONS, np.uint8)
 
-element = np.array([[0,1,0],[1,1,1],[0,1,0]], np.uint8)
+pulse_element = np.array([[1,1,0],[1,0,0],[0,0,0]], np.uint8)
+border_element = np.array([[1,1,1],[1,1,1],[1,1,1]], np.uint8)
 
 def pulse(state):
     pulse1, pulse0 = state
-    pulse2 = cv2.dilate(pulse1, element)
-    pulse2 = cv2.subtract(pulse2, pulse1)
-    pulse2 = cv2.subtract(pulse2, pulse0)
-    pulse2 = cv2.multiply(pulse2, 1)
+    pulse2 = cv2.dilate(pulse1, pulse_element)
+
     pulse2 = cv2.bitwise_and(pulse2, expansion_room)
     return pulse2, pulse1
 
-road_image_negative = cv2.bitwise_not(road_image)
-border = cv2.dilate(road_image, element)
-border = cv2.subtract(border, img)
+LEVEL_128 = np.full(DIMENSIONS, 128, np.uint8)
+border = cv2.dilate(road_image, border_element)
+border = cv2.subtract(border, road_image)
+pulse1 = cv2.bitwise_and(LEVEL_128, border)
+pulse1 = cv2.bitwise_and(pulse_source_image, pulse1)
 cv2.namedWindow("border", cv2.WINDOW_AUTOSIZE)
 cv2.imshow("border", border)
-expansion_room_128 = cv2.bitwise_and(road_image, np.full(DIMENSIONS, 128, np.uint8))
+expansion_room_128 = cv2.bitwise_and(road_image, LEVEL_128)
 #expansion_room = cv2.bitwise_or(expansion_room_128, expansion_room_64)
 expansion_room = expansion_room_128
 cv2.namedWindow("expansion_room", cv2.WINDOW_AUTOSIZE)
 cv2.imshow("expansion_room", expansion_room)
 state0 = state = pulse1, pulse0
 cv2.namedWindow("W3", cv2.WINDOW_AUTOSIZE)
-while cv2.waitKey(200) != 27: # press escape
+while cv2.waitKey(20) != 27: # press escape
     cv2.imshow("W3", cv2.multiply(state[0], 4))
     state = pulse(state)
     print(list(map(bin, set(list(state[0].reshape((-1)))))))
