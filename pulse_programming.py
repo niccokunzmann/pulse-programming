@@ -3,11 +3,17 @@ import numpy as np
 import cv2
 import scipy.cluster.vq as vq
 import time
+import sys
+from utils import *
+
+
+image_path = (sys.argv[1] if len(sys.argv) > 1 else "pathxxx.png")
 
 codebook_raw = [[0,0,0], [255, 255, 255], [128,128,128]]
 NUMBER_OF_COLORS = len(codebook_raw)
 
-image = cv2.imread("pathxxx.png")
+
+image = cv2.imread(image_path)
 DIMENSIONS = (len(image), len(image[0]))
 
 #image = cv2.GaussianBlur(image, (5, 5), 0)
@@ -15,20 +21,13 @@ flat_colors = image.reshape((-1, 3))
 whitened = vq.whiten(np.concatenate((flat_colors, np.array(codebook_raw, np.uint8))))
 all_features = whitened[:len(flat_colors)]
 codebook_whitened = whitened[len(flat_colors):]
+codebook_whitened = len(codebook_whitened)
 codebook, distortion = vq.kmeans(whitened, codebook_whitened)
 print("codebook", codebook)
 code, distance = vq.vq(all_features, codebook)
 
 reshaped_code = code.reshape(DIMENSIONS)
 print("Assuming background has biggest area.")
-
-def rgb_likelyhood(color):
-    """Return deviation from red, green, blue"""
-    return (color[1] - color[2])**2, (color[0] - color[2])**2, (color[0] - color[1])**2
-
-def how_colored_is_this(color):
-    r, g, b = rgb_likelyhood(color)
-    return g + b + r
 
 color_usage = [0] * NUMBER_OF_COLORS
 for cls in code:
@@ -88,7 +87,7 @@ def pulse(state, element, area, input=()):
 
 cv2.namedWindow("W3", cv2.WINDOW_AUTOSIZE)
 nor_pulse = down_pulse = right_pulse = road_pulse = (zeros, zeros)
-while cv2.waitKey(20) != 27: # press escape
+while cv2.waitKey(500) != 27: # press escape
     t = time.time()
     pulse_input = cv2.bitwise_and(pulse_input_image, cv2.bitwise_not(cv2.dilate(nor_pulse[0], expand_element)))
     road_pulse = pulse(road_pulse, road_pulse_element, road_image, (pulse_input, down_pulse[0], right_pulse[0]))
