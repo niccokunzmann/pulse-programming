@@ -9,24 +9,41 @@ NUMBER_OF_COLORS = len(codebook_raw)
 image = cv2.imread("pathxxx.png")
 DIMENSIONS = (len(image), len(image[0]))
 
-image = cv2.GaussianBlur(image, (5, 5), 0)
+#image = cv2.GaussianBlur(image, (5, 5), 0)
 flat_colors = image.reshape((-1, 3))
 whitened = vq.whiten(np.concatenate((flat_colors, np.array(codebook_raw, np.uint8))))
-codebook, distortion = vq.kmeans(whitened, NUMBER_OF_COLORS)
-print("codebook", codebook)
 all_features = whitened[:len(flat_colors)]
-codebook_features = whitened[len(flat_colors):]
+codebook_whitened = whitened[len(flat_colors):]
+codebook, distortion = vq.kmeans(whitened, codebook_whitened)
+print("codebook", codebook)
 code, distance = vq.vq(all_features, codebook)
-codebook_classification, distance = vq.vq(codebook_features, codebook)
 
 reshaped_code = code.reshape(DIMENSIONS)
 print("Assuming background has biggest area.")
 
-background_class = codebook_classification[1]
-road_source_class = codebook_classification[0]
-bridge_source_class = codebook_classification[3]
-pulse_source_class = codebook_classification[2]
-pump_source_class = codebook_classification[4]
+def rgb_likelyhood(color):
+    """Return deviation from red, green, blue"""
+    return (color[1] - color[2])**2, (color[0] - color[2])**2, (color[0] - color[1])**2
+
+def classify(color):
+    r, g, b = rgb_likelyhood(color)
+    return g + b - r, b + r - g, r + g - b
+
+classified_features = list(map(classify, codebook))
+print("classified_features", np.array(classified_features))
+
+indices = range(len(codebook))
+red = max(indices, key=lambda i: classify(codebook[i])[0])
+green = max(indices, key=lambda i: classify(codebook[i])[1])
+blue = max(indices, key=lambda i: classify(codebook[i])[2])
+
+
+
+background_class = codebook[0]
+road_source_class = codebook[0]
+bridge_source_class = green
+pulse_source_class = blue
+pump_source_class = red
 
 road_image = np.array(
     [[255 * (col == road_source_class) for col in row]
