@@ -2,6 +2,7 @@
 import numpy as np
 import cv2
 import scipy.cluster.vq as vq
+import time
 
 codebook_raw = [[0,0,0], [255, 255, 255], [128,128,128]]
 NUMBER_OF_COLORS = len(codebook_raw)
@@ -60,6 +61,7 @@ zeros = np.zeros(DIMENSIONS, np.uint8)
 road_pulse_element = np.array([[0,1,0],[1,1,1],[0,1,0]], np.uint8)
 right_pulse_element = np.array([[0,0,0],[1,0,0],[0,0,0]], np.uint8)
 down_pulse_element = np.array([[0,1,0],[0,0,0],[0,0,0]], np.uint8)
+nor_pulse_element = np.array([[1,0,0],[0,0,0],[0,0,0]], np.uint8)
 generator_element1 = np.array([[1,0,0],[0,0,0],[0,0,0]], np.uint8)
 generator_element2 = np.array([[0,1,1],[1,1,1],[1,1,1]], np.uint8)
 expand_element = np.array([[1,1,1],[1,1,1],[1,1,1]], np.uint8)
@@ -85,65 +87,18 @@ def pulse(state, element, area, input=()):
     return pulse2, pulse1
 
 cv2.namedWindow("W3", cv2.WINDOW_AUTOSIZE)
-down_pulse = right_pulse = road_pulse = (zeros, zeros)
+nor_pulse = down_pulse = right_pulse = road_pulse = (zeros, zeros)
 while cv2.waitKey(20) != 27: # press escape
-    road_pulse = pulse(road_pulse, road_pulse_element, road_image, (pulse_input_image, down_pulse[0], right_pulse[0]))
+    t = time.time()
+    pulse_input = cv2.bitwise_and(pulse_input_image, cv2.bitwise_not(cv2.dilate(nor_pulse[0], expand_element)))
+    road_pulse = pulse(road_pulse, road_pulse_element, road_image, (pulse_input, down_pulse[0], right_pulse[0]))
     right_pulse = pulse(right_pulse, right_pulse_element, gate_expanded, (road_pulse[0],))
     down_pulse = pulse(down_pulse, down_pulse_element, gate_expanded, (road_pulse[0],))
+    nor_input = cv2.bitwise_and(right_pulse[0], down_pulse[0])
+    nor_pulse = pulse(nor_pulse, nor_pulse_element, gate_expanded, (nor_input,))
     image = road_pulse[0]
-    for a_pulse in (right_pulse, down_pulse):
+    for a_pulse in (right_pulse, down_pulse, nor_pulse):
         image = cv2.bitwise_or(image, a_pulse[0])
     cv2.imshow("W3", image)
+    print("duration", time.time() - t)
 exit(0)
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-pulse0 = zeros = np.zeros(DIMENSIONS, np.uint8)
-pulse1 = np.zeros(DIMENSIONS, np.uint8)
-
-pulse_element = np.array([[1,1,0],[1,0,0],[0,0,0]], np.uint8)
-border_element = np.array([[1,1,1],[1,1,1],[1,1,1]], np.uint8)
-
-def pulse(state):
-    pulse1, pulse0 = state
-    pulse2 = cv2.dilate(pulse1, pulse_element)
-    pulse2 = cv2.subtract(pulse2, pulse0)
-    pulse2 = cv2.bitwise_and(pulse2, expansion_room)
-    return pulse2, pulse1
-
-LEVEL_128 = np.full(DIMENSIONS, 128, np.uint8)
-border = cv2.dilate(road_image, border_element)
-border = cv2.subtract(border, road_image)
-pulse1 = cv2.bitwise_and(LEVEL_128, border)
-pulse1 = cv2.bitwise_and(pulse_source_image, pulse1)
-cv2.namedWindow("border", cv2.WINDOW_AUTOSIZE)
-cv2.imshow("border", border)
-expansion_room_128 = cv2.bitwise_and(road_image, LEVEL_128)
-#expansion_room = cv2.bitwise_or(expansion_room_128, expansion_room_64)
-expansion_room = expansion_room_128
-cv2.namedWindow("expansion_room", cv2.WINDOW_AUTOSIZE)
-cv2.imshow("expansion_room", expansion_room)
-state0 = state = pulse1, pulse0
-cv2.namedWindow("W3", cv2.WINDOW_AUTOSIZE)
-while cv2.waitKey(20) != 27: # press escape
-    cv2.imshow("W3", cv2.multiply(state[0], 4))
-    state = pulse(state)
-    print(list(map(bin, set(list(state[0].reshape((-1)))))))
-    if cv2.countNonZero(state[0]) == 0:
-        state = state0
