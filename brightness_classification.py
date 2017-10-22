@@ -57,67 +57,81 @@ from utils import *
 from sklearn.mixture import GaussianMixture
 from scipy.optimize import minimize
 
-image_path = (sys.argv[1] if len(sys.argv) > 1 else "pathxxx.png")
-
-t = time.time()
-image = cv2.imread(image_path)
-print("read:", time.time() - t); t = time.time()
-DIMENSIONS = (len(image), len(image[0]))
-print("DIMENSIONS", DIMENSIONS)
-
-def mean_line(first_quarter_mean, second_quarter_mean, length):
-    a_1 = 2 * (first_quarter_mean + second_quarter_mean)
-    a_2 = length
-    b = (3 * first_quarter_mean + second_quarter_mean) / 2
-    return lambda x: a_1 * x // a_2 + b
-
-gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
-# from https://stackoverflow.com/questions/7624765/converting-an-opencv-image-to-black-and-white
-X_PARTITIONS = 4
-Y_PARTITIONS = 4
-h, w = DIMENSIONS
-inputs = np.array([
-    (w * (x + 0.5) / X_PARTITIONS, h * (y + 0.5) / Y_PARTITIONS, xy_split.mean())
-    for x, x_split in enumerate(np.array_split(gray, X_PARTITIONS, axis=1))
-    for y, xy_split in enumerate(np.array_split(x_split, Y_PARTITIONS, axis=0))
-    ])
-print("means:", time.time() - t); t = time.time()
-print("inputs", inputs)
-print("partitions:", time.time() - t); t = time.time()
+def get_foreground_from_BGR(image, x_partitions=5, y_partitions=4):
+    """Get the foreground if an BGR image which is a photo lit by a lamp."""
+    gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
+    return get_foreground_from_gray(gray, x_partitions=x_partitions, y_partitions=y_partitions)
 
 def f(a, c, lx, ly, lz, x, y):
+    """Compute the lamp brightness at (x,y).
+
+    See the comment of the module."""
     return c / ((lx-x)**2 + (ly-y)**2 + abs(lz)) + a
 
-def fitness(args):
-    a, c, lx, ly, lz = args
-    return sum(map(lambda xym: (f(a, c, lx, ly, lz, xym[0], xym[1]) - xym[2])**2, inputs))
+def get_foreground_from_gray(gray, x_partitions=5, y_partitions=4):
+    """Get the foreground from a gray image of a lamp lit photo."""
+    computed_lamp_brightness = compute_lamp_brightness(gray, x_partitions=x_partitions, y_partitions=y_partitions)
+    return foreground_from_gray_and_lamp_brightness(gray, computed_lamp_brightness)
 
-START = (inputs[0][2], 1.0*h*w*h*w, w/2, h/2, w*h*10)
-result = minimize(fitness, START, method="Nelder-Mead", options={"maxiter":100000, "disp":True})
-print("result", result, result.x)
-a, c, lx, ly, lz = result.x
-print("fitness", fitness(result.x), "start", fitness(START))
-print("ambient light", a, "lamp at", (lx, ly, lz**0.5))
-print("coloring:", time.time() - t); t = time.time()
+def foreground_from_gray_and_lamp_brightness(gray, computed_lamp_brightness):
+    """Finally get the foreground from the lamp lit photo without distorting lamp influence."""
+    gray_without_lamp = gray - computed_lamp_brightness
+    thresh, im_colored = cv2.threshold(gray_without_lamp, 128, 255, cv2.THRESH_BINARY | cv2.THRESH_OTSU)
+    return im_colored
 
-assert a > 0
-computed_lamp_brightness = np.array(
-    [[f(0, c, lx, ly, lz, x, y) for x in range(w)] for y in range(h)], np.uint8)
-image_without_lamp = image - cv2.cvtColor(computed_lamp_brightness, cv2.COLOR_GRAY2BGR)
-gray_without_lamp = gray - computed_lamp_brightness
+def compute_lamp_brightness(gray, x_partitions=5, y_partitions=4, debug=True):
+    """Return the lamp brightness of a gray image.
 
-print("lamp position:", time.time() - t); t = time.time()
+    See the comment of the module for more information.
+    """
+    # from https://stackoverflow.com/questions/7624765/converting-an-opencv-image-to-black-and-white
+    X_PARTITIONS = x_partitions
+    Y_PARTITIONS = y_partitions
+    DIMENSIONS = (len(gray), len(gray[0]))
+    h, w = DIMENSIONS
+    inputs = np.array([
+        (w * (x + 0.5) / X_PARTITIONS, h * (y + 0.5) / Y_PARTITIONS, xy_split.mean())
+        for x, x_split in enumerate(np.array_split(gray, X_PARTITIONS, axis=1))
+        for y, xy_split in enumerate(np.array_split(x_split, Y_PARTITIONS, axis=0))
+        ])
 
-thresh, im_colored = cv2.threshold(gray_without_lamp, 128, 255, cv2.THRESH_BINARY | cv2.THRESH_OTSU)
+    def fitness(args):
+        a, c, lx, ly, lz = args
+        return sum(map(lambda xym: (f(a, c, lx, ly, lz, xym[0], xym[1]) - xym[2])**2, inputs))
 
-print("threshold:", time.time() - t); t = time.time()
+    START = (inputs[0][2], 1.0*h*w*h*w, w/2, h/2, w*10)
+    result = minimize(fitness, START, method="Nelder-Mead", options={"maxiter":100000, "disp":True})
+    a, c, lx, ly, lz = result.x
+    if debug:
+        print("result", result, result.x)
+        print("fitness", fitness(result.x), "start", fitness(START))
+        print("ambient light", a, "lamp at", (lx, ly, lz**0.5))
 
-cv2.namedWindow("im_colored", cv2.WINDOW_AUTOSIZE)
-cv2.imshow("im_colored", im_colored)
-cv2.namedWindow("image", cv2.WINDOW_AUTOSIZE)
-cv2.imshow("image", image)
-cv2.namedWindow("image_without_lamp", cv2.WINDOW_AUTOSIZE)
-cv2.imshow("image_without_lamp", image_without_lamp)
-print("images:", time.time() - t); t = time.time()
+    assert a > 0, "We can not have a negative ambient light intensity."
+    return np.array(
+        [[f(0, c, lx, ly, lz, x, y) for x in range(w)] for y in range(h)], np.uint8)
 
-cv2.waitKey(0)
+if __name__ == "__main__":
+    image_path = (sys.argv[1] if len(sys.argv) > 1 else "pathxxx.png")
+
+    t = time.time()
+    image = cv2.imread(image_path)
+    print("read:", time.time() - t); t = time.time()
+    DIMENSIONS = (len(image), len(image[0]))
+    print("DIMENSIONS", DIMENSIONS)
+    gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
+    computed_lamp_brightness = compute_lamp_brightness(gray)
+    print("lamp brightness:", time.time() - t); t = time.time()
+    im_colored = foreground_from_gray_and_lamp_brightness(gray, computed_lamp_brightness)
+    print("threshold:", time.time() - t); t = time.time()
+    image_without_lamp = image - cv2.cvtColor(computed_lamp_brightness, cv2.COLOR_GRAY2BGR)
+
+    cv2.namedWindow("im_colored", cv2.WINDOW_AUTOSIZE)
+    cv2.imshow("im_colored", im_colored)
+    cv2.namedWindow("image", cv2.WINDOW_AUTOSIZE)
+    cv2.imshow("image", image)
+    cv2.namedWindow("image_without_lamp", cv2.WINDOW_AUTOSIZE)
+    cv2.imshow("image_without_lamp", image_without_lamp)
+    print("images:", time.time() - t); t = time.time()
+
+    cv2.waitKey(0)
