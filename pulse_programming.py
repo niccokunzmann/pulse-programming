@@ -74,7 +74,7 @@ cv2.namedWindow("PULSE", cv2.WINDOW_AUTOSIZE)
 cv2.namedWindow("pulse_input", cv2.WINDOW_AUTOSIZE)
 down_pulse = right_pulse = road_pulse = (zeros, zeros)
 nor_pulse = zeros
-while cv2.waitKey(20) != 27: # press escape
+while cv2.waitKey(1) != 27: # press escape
     t = time.time()
     pulse_input = cv2.dilate(cv2.bitwise_and(
         pulse_input_image, cv2.bitwise_not(
