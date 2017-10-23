@@ -7,6 +7,7 @@ The NAND gates generate pulses which walk along the lines and
 trigger other gates.
 
 ![](explanation.png)
+![](https://github.com/niccokunzmann/pulse-programming/releases/download/v0.0.1/explanation.gif)
 
 ## Installation
 
