@@ -13,7 +13,7 @@ image_path = (sys.argv[1] if len(sys.argv) > 1 else "pathxxx.png")
 
 codebook_raw = [[0,0,0], [255, 255, 255], [128,128,128]]
 NUMBER_OF_COLORS = len(codebook_raw)
-
+OUTPUT_ANIMATION = False
 
 image = camera_image = cv2.imread(image_path)
 DIMENSIONS = (len(image), len(image[0]))
@@ -103,6 +103,6 @@ while cv2.waitKey(1) != 27: # press escape
     cv2.imshow("PULSE", show_image)
     print("duration", time.time() - t, "frame_index", frame_index)
     frame_index+= 1
-    if True:
+    if OUTPUT_ANIMATION:
         output_animation(frame_index, image_path, show_image)
 exit(0)
