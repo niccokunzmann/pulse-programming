@@ -76,10 +76,12 @@ def get_foreground_from_gray(gray, x_partitions=5, y_partitions=4):
 def foreground_from_gray_and_lamp_brightness(gray, computed_lamp_brightness):
     """Finally get the foreground from the lamp lit photo without distorting lamp influence."""
     gray_without_lamp = gray - computed_lamp_brightness
+    non_zero = cv2.compare(gray, computed_lamp_brightness, cv2.CMP_GE)
+    gray_without_lamp = cv2.bitwise_and(non_zero, gray_without_lamp)
     thresh, im_colored = cv2.threshold(gray_without_lamp, 128, 255, cv2.THRESH_BINARY | cv2.THRESH_OTSU)
     return im_colored
 
-def compute_lamp_brightness(gray, x_partitions=5, y_partitions=4, debug=True):
+def compute_lamp_brightness(gray, x_partitions=4, y_partitions=4, debug=True):
     """Return the lamp brightness of a gray image.
 
     See the comment of the module for more information.
@@ -102,12 +104,17 @@ def compute_lamp_brightness(gray, x_partitions=5, y_partitions=4, debug=True):
     START = (inputs[0][2], 1.0*h*w*h*w, w/2, h/2, w*10)
     result = minimize(fitness, START, method="Nelder-Mead", options={"maxiter":100000, "disp":True})
     a, c, lx, ly, lz = result.x
+    NO_LAMP = (a, 0, lx, ly, lz)
     if debug:
+        print("inputs", inputs)
         print("result", result, result.x)
-        print("fitness", fitness(result.x), "start", fitness(START))
-        print("ambient light", a, "lamp at", (lx, ly, lz**0.5))
+        print("fitness", fitness(result.x), "start", fitness(START), "no lamp", fitness(NO_LAMP))
+        print("ambient light", a, "lamp at", (lx, ly, abs(lz)**0.5))
 
     assert a > 0, "We can not have a negative ambient light intensity."
+    if lz != lz: # nan
+        if debug:
+            print("No place for the lamp?")
     return np.array(
         [[f(0, c, lx, ly, lz, x, y) for x in range(w)] for y in range(h)], np.uint8)
 
@@ -132,6 +139,8 @@ if __name__ == "__main__":
     cv2.imshow("image", image)
     cv2.namedWindow("image_without_lamp", cv2.WINDOW_AUTOSIZE)
     cv2.imshow("image_without_lamp", image_without_lamp)
+    cv2.namedWindow("gray", cv2.WINDOW_AUTOSIZE)
+    cv2.imshow("gray", gray)
     print("images:", time.time() - t); t = time.time()
 
     cv2.waitKey(0)

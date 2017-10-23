@@ -40,6 +40,10 @@ Run this to load the Python environment:
 
 In order to run the program, you can type
 
+    python pulse_programming.py explanation.png
+
+or 
+
     python pulse_programming.py photos/photo4.jpg
 
 `Esc` - the Escape Key closes the program.

@@ -22,8 +22,8 @@ gate_image = get_blue_recognition(image)
 foreground_image = get_foreground_from_BGR(image)
 road_image = cv2.bitwise_and(cv2.bitwise_not(foreground_image), cv2.bitwise_not(gate_image))
 
-DELATION_ITERATIONS = 5
-EROSION_ITERATIONS = 3
+DELATION_ITERATIONS = 3
+EROSION_ITERATIONS = 2
 expansion_element = np.array([[1,1,1], [1,1,1], [1,1,1]])
 gate_image = cv2.erode(gate_image, expansion_element, iterations=EROSION_ITERATIONS)
 gate_image = cv2.dilate(gate_image, expansion_element, iterations=DELATION_ITERATIONS)
