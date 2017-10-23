@@ -99,4 +99,7 @@ ENV/
 
 # mypy
 .mypy_cache/
->>>>>>> 9dfde1ff251180c2c62edff4efe8b3a18c9b8993
+
+# ----------------- own ignores ----------------
+animation
+tmp

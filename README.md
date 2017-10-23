@@ -6,6 +6,8 @@ On a white board, you can paint blue NAND gates and black lines.
 The NAND gates generate pulses which walk along the lines and
 trigger other gates.
 
+![](explanation.png)
+
 ## Installation
 
 You can setup this by downloading or cloning the repository.
@@ -42,7 +44,7 @@ In order to run the program, you can type
 
     python pulse_programming.py explanation.png
 
-or 
+or
 
     python pulse_programming.py photos/photo4.jpg
 

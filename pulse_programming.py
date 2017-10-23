@@ -1,4 +1,5 @@
 #!/usr/bin/env python3
+import os
 import numpy as np
 import cv2
 import scipy.cluster.vq as vq
@@ -58,6 +59,11 @@ gate_expanded = cv2.dilate(gate_image, gate_expand_element)
 #cv2.namedWindow("pulse_input_image", cv2.WINDOW_AUTOSIZE)
 #cv2.imshow("pulse_input_image", pulse_input_image)
 
+def output_animation(frame_index, base_path, image):
+    filename, extension = os.path.splitext(base_path)
+    filename += "-animation-frame-{:05}{}".format(frame_index, extension)
+    cv2.imwrite(filename, image)
+
 def pulse(state, element, area, input=()):
     """Make the next pulse using an element on an area, adding the input
     as a pulse source."""
@@ -74,6 +80,7 @@ cv2.namedWindow("PULSE", cv2.WINDOW_AUTOSIZE)
 #cv2.namedWindow("pulse_input", cv2.WINDOW_AUTOSIZE)
 down_pulse = right_pulse = road_pulse = (zeros, zeros)
 nor_pulse = zeros
+frame_index = 0
 while cv2.waitKey(1) != 27: # press escape
     t = time.time()
     pulse_input = cv2.dilate(cv2.bitwise_and(
@@ -94,5 +101,8 @@ while cv2.waitKey(1) != 27: # press escape
 #    cv2.imshow("pulse_input", pulse_input)
     show_image = cv2.bitwise_or(camera_image, cv2.cvtColor(image, cv2.COLOR_GRAY2BGR))
     cv2.imshow("PULSE", show_image)
-    print("duration", time.time() - t)
+    print("duration", time.time() - t, "frame_index", frame_index)
+    frame_index+= 1
+    if True:
+        output_animation(frame_index, image_path, show_image)
 exit(0)
