@@ -14,7 +14,7 @@ codebook_raw = [[0,0,0], [255, 255, 255], [128,128,128]]
 NUMBER_OF_COLORS = len(codebook_raw)
 
 
-image = cv2.imread(image_path)
+image = camera_image = cv2.imread(image_path)
 DIMENSIONS = (len(image), len(image[0]))
 
 #image = cv2.GaussianBlur(image, (5, 5), 0)
@@ -23,7 +23,7 @@ foreground_image = get_foreground_from_BGR(image)
 road_image = cv2.bitwise_and(cv2.bitwise_not(foreground_image), cv2.bitwise_not(gate_image))
 
 DELATION_ITERATIONS = 5
-EROSION_ITERATIONS = 1
+EROSION_ITERATIONS = 3
 expansion_element = np.array([[1,1,1], [1,1,1], [1,1,1]])
 gate_image = cv2.erode(gate_image, expansion_element, iterations=EROSION_ITERATIONS)
 gate_image = cv2.dilate(gate_image, expansion_element, iterations=DELATION_ITERATIONS)
@@ -55,8 +55,8 @@ pulse_input_image = cv2.subtract(
     cv2.dilate(gate_image, pulse_input_element))
 gate_expanded = cv2.dilate(gate_image, gate_expand_element)
 
-cv2.namedWindow("pulse_input_image", cv2.WINDOW_AUTOSIZE)
-cv2.imshow("pulse_input_image", pulse_input_image)
+#cv2.namedWindow("pulse_input_image", cv2.WINDOW_AUTOSIZE)
+#cv2.imshow("pulse_input_image", pulse_input_image)
 
 def pulse(state, element, area, input=()):
     """Make the next pulse using an element on an area, adding the input
@@ -71,7 +71,7 @@ def pulse(state, element, area, input=()):
     return pulse2, pulse1
 
 cv2.namedWindow("PULSE", cv2.WINDOW_AUTOSIZE)
-cv2.namedWindow("pulse_input", cv2.WINDOW_AUTOSIZE)
+#cv2.namedWindow("pulse_input", cv2.WINDOW_AUTOSIZE)
 down_pulse = right_pulse = road_pulse = (zeros, zeros)
 nor_pulse = zeros
 while cv2.waitKey(1) != 27: # press escape
@@ -90,7 +90,9 @@ while cv2.waitKey(1) != 27: # press escape
     image = road_pulse[0]
     for a_pulse, strength in ((right_pulse[0], 3), (down_pulse[0], 3), (nor_pulse, 1)):
         image = cv2.bitwise_or(image, a_pulse//strength)
-    cv2.imshow("PULSE", image)
-    cv2.imshow("pulse_input", pulse_input)
+
+#    cv2.imshow("pulse_input", pulse_input)
+    show_image = cv2.bitwise_or(camera_image, cv2.cvtColor(image, cv2.COLOR_GRAY2BGR))
+    cv2.imshow("PULSE", show_image)
     print("duration", time.time() - t)
 exit(0)
