@@ -14,9 +14,10 @@ trigger other gates.
 You can setup this by downloading or cloning the repository.
 Then, open a command line in the repository folder.
 
-On Debain/Ubuntu you need to have Python 3 and Pip installed:
+On Debain/Ubuntu you need to have Python 3 and Pip installed.
+`mplayer` is used for the camera.
 
-    sudo apt-get install python3 pip-python3
+    sudo apt-get install python3 pip-python3 mplayer
 
 Then, we create a new environment for the Python packages:
 

@@ -13,35 +13,71 @@ import scipy.cluster.vq as vq
 import time
 import sys
 from utils import *
-from sklearn.mixture import GaussianMixture
 
-image_path = (sys.argv[1] if len(sys.argv) > 1 else "pathxxx.png")
 
-t = time.time()
-image = cv2.imread(image_path)
-print("read:", time.time() - t); t = time.time()
-image = cv2.GaussianBlur(image, (5, 5), 0)
-print("blur:", time.time() - t); t = time.time()
-DIMENSIONS = (len(image), len(image[0]))
+def get_blue_recognition(image, threshold=0.97):
+    """Return the places which are blue as binary array.
 
-def squared(a):
-    return cv2.multiply(a, a)
-b,g,r = cv2.split(np.array(image / 2, np.int16))
-colored_ness = squared(b - g) + squared(r - g) + squared(r - b)
-colored_ness2 = colored_ness.reshape(-1, 1)
-#colored_ness = np.array([[how_colored_is_this_normalized(c) for c in row] for row in image])
-gmm = GaussianMixture(n_components=2).fit(colored_ness2)
-gate_image = np.array(gmm.predict(colored_ness2).reshape(DIMENSIONS), np.uint8)
-gate_image *= 255
-print("coloring:", time.time() - t); t = time.time()
-print("gate_image", gate_image)
+    Parameters:
+    - image
+        is the image in BGR format.
+        Recommendations:
+            If you blur the image before you input it, it yields better results.
+            The image does not need to be brighness adjusted.
 
-cv2.namedWindow("colored_ness", cv2.WINDOW_AUTOSIZE)
-cv2.imshow("gate_image", gate_image)
-cv2.namedWindow("image", cv2.WINDOW_AUTOSIZE)
-cv2.imshow("image", image)
-cv2.namedWindow("colored_ness", cv2.WINDOW_AUTOSIZE)
-cv2.imshow("colored_ness", colored_ness * 20)
-print("images:", time.time() - t); t = time.time()
+    Result:
+    - is_blue
+        An uint8 numpy.array with the dimensions of the image.
+    """
+    b,g,r = cv2.split(image)
+    r = r / 2
+    g = g / 2
+    a = r + g
+    b = b * threshold
+    return cv2.compare(b, a, cv2.CMP_GT)
 
-cv2.waitKey(0)
+def get_green_recognition(image, threshold=0.97):
+    """Return the places which are green as binary array.
+
+    Parameters:
+    - image
+        is the image in BGR format.
+        Recommendations:
+            If you blur the image before you input it, it yields better results.
+            The image does not need to be brighness adjusted.
+
+    Result:
+    - is_green
+        An uint8 numpy.array with the dimensions of the image.
+    """
+    b,g,r = cv2.split(image)
+    r = r / 4
+    b = b / 4
+    a = r + b
+    g = np.array(g * (float(threshold) / 2) + 128 - a, np.uint8)
+    thresh, is_green = cv2.threshold(g, 128, 255, cv2.THRESH_BINARY | cv2.THRESH_OTSU)
+    return is_green
+    #return cv2.compare(g, a, cv2.CMP_GT)
+
+
+if __name__ == "__main__":
+    image_path = (sys.argv[1] if len(sys.argv) > 1 else "pathxxx.png")
+
+    t = time.time()
+    image = cv2.imread(image_path)
+    print("read:", time.time() - t); t = time.time()
+    #image = cv2.GaussianBlur(image, (5, 5), 0)
+    print("blur:", time.time() - t); t = time.time()
+    DIMENSIONS = (len(image), len(image[0]))
+
+    blue_img = get_blue_recognition(image)
+    print("blueness:", time.time() - t); t = time.time()
+
+
+    cv2.namedWindow("blue_img", cv2.WINDOW_AUTOSIZE)
+    cv2.imshow("blue_img", blue_img)
+    cv2.namedWindow("image", cv2.WINDOW_AUTOSIZE)
+    cv2.imshow("image", image)
+    print("images:", time.time() - t); t = time.time()
+
+    cv2.waitKey(0)

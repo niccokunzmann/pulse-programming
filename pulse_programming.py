@@ -6,10 +6,10 @@ import scipy.cluster.vq as vq
 import time
 import sys
 from utils import *
-from blue_classification import get_blue_recognition
+from color_classification import get_blue_recognition
 from brightness_classification import get_foreground_from_BGR
 
-image_path = (sys.argv[1] if len(sys.argv) > 1 else "pathxxx.png")
+image_path = (sys.argv[1] if len(sys.argv) > 1 else "explanation.png")
 
 codebook_raw = [[0,0,0], [255, 255, 255], [128,128,128]]
 NUMBER_OF_COLORS = len(codebook_raw)
