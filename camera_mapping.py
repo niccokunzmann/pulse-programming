@@ -97,8 +97,8 @@ def mouseCallback(event_type, x, y, *args):
         #h,  w = image.shape[:2]
         #newcameramtx, roi=cv2.getOptimalNewCameraMatrix(mtx,dist,(w,h),1,(w,h))
         #H = newcameramtx
-        #H, x = cv2.findHomography(np.array(points), np.array(recognized_points))
-        H = find_homography(np.array(points), np.array(recognized_points))
+        H, x = cv2.findHomography(np.array(points), np.array(recognized_points))
+        #H = find_homography(np.array(points), np.array(recognized_points))
         print("x", x, "H", H)
         for x1, y1, x2, y2 in ((0,0,1,1), (1,0,0,1)):
             x1_, y1_, s1_ = H.dot(np.array([x1, y1, 1]))
