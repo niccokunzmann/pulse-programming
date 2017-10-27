@@ -18,7 +18,7 @@ def list_video_devices():
             for filename in os.listdir("/dev")
             if filename.startswith("video")]
 
-def capture_video(input_device="", mirror=False):
+def capture_image(input_device="", mirror=False):
     """Capture a video frame.
 
     The input device can be "" which means the default is used or
@@ -45,10 +45,22 @@ def capture_video(input_device="", mirror=False):
         image = cv2.imread(file_path)
         return image
 
+def max_resolution():
+    """Return the maximum resolution.
+
+    This uses xrandr to get the resolution.
+    """
+    called_process = subprocess.run(["xrandr"], stdout=subprocess.PIPE)
+    first_line = called_process.stdout.decode().split("\n", 1)[0]
+    current = [x for x in first_line.split(",") if "current" in x][0]
+    width, height = [s for s in current.split() if s.isdigit()]
+    return int(width), int(height)
+
 if __name__ == "__main__":
     print("Video devices:", list_video_devices())
     t = time.time()
-    image = capture_video()
+    image = capture_image()
+    print("max_resolution", max_resolution())
     print("capture_video", time.time() - t)
     cv2.namedWindow("Video Capture", cv2.WINDOW_AUTOSIZE)
     cv2.imshow("Video Capture", image)
@@ -73,6 +85,7 @@ if __name__ == "__main__":
     for line, in lines:
         print("line", line)
         cv2.line(gray, (line[0], line[1]), (line[2], line[3]), 0)
+        cv2.line(gray, (line[0] + 1, line[1] + 1), (line[2] + 1, line[3] + 1), 255)
     cv2.namedWindow("gray", cv2.WINDOW_AUTOSIZE)
     cv2.imshow("gray", gray)
     cv2.waitKey(0)
