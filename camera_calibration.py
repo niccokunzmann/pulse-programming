@@ -25,7 +25,7 @@ def interact():
 
 cv2.namedWindow(CALIBRATION, cv2.WINDOW_AUTOSIZE)
 cv2.imshow(CALIBRATION, zeros)
-cv2.moveWindow(CALIBRATION, 0,0)
+
 interact()
 
 background = capture_image_gray()
@@ -106,6 +106,9 @@ class Calibration:
         self._source_points = []
         self._destination_points = []
         self._H = None # Transformation Matrix
+        cv2.namedWindow(self._window_name, cv2.WINDOW_AUTOSIZE)
+        cv2.imshow(self._window_name, self.get_resolution_zeros())
+        cv2.moveWindow(self._window_name, 0, 0)
 
     @staticmethod
     def wait_for_key_press():
@@ -128,14 +131,17 @@ class Calibration:
                 self.wait_for_key_press()
             self.record_point()
 
+    def get_resolution_zeros(self):
+        """Return an array of zero values uint8 in the resolution."""
+        return np.zeros(self._resolution[::-1])
+
     def record_point(self):
         """Display a point and record it with the camera."""
-        image = np.zeros(self._resolution[::-1])
+        image = self.get_resolution_zeros()
         x = int(random.random() * self._resolution[0])
         y = int(random.random() * self._resolution[1])
         cv2.circle(image, (x, y), circle_radius, 255, -1)
         cv2.imshow(self._window_name, image)
-        interact()
         capture = capture_image_gray()
         diff = capture // 2 + 128 - background
         ret, white = cv2.threshold(diff, 128, 255, cv2.THRESH_BINARY | cv2.THRESH_OTSU)
@@ -166,7 +172,7 @@ class Calibration:
 
     def compute_matrix(self):
         """Compute the transformation matrix."""
-        if self._matrix is not None:
+        if self._H is not None:
             return
         src = np.array(self._source_points)
         dst = np.array(self._destination_points)
