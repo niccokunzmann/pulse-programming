@@ -7,14 +7,15 @@ from scipy.optimize import minimize
 
 if len(sys.argv) >= 2:
     image = sys.argv[1]
-elif list_video_devices():
-    image = capture_image()
+#elif list_video_devices():
+#    image = capture_image()
 else:
     image = "photos/lines_screenshot_25.10.2017.png"
 
 if isinstance(image, str):
     image = cv2.imread(image)
 
+captured_image = capture_image()
 
 def find_homography_old(src, dst):
     """Return the homography matrix so that the squared distances between the
@@ -76,8 +77,10 @@ def find_homography(source, destination):
     #print("svd", svd)
     return np.array([vt.item(8, i) for i in range(9)]).reshape(3,3)
 
-#points = [(0,0), (0, 0.5), (0,1), (0.5, 1), (1,1), (1, 0.5), (1, 0), (0.5, 0)]
-points = [(0,0), (0,1), (1,1), (1, 0)]
+points = [(0,0), (0, 0.5), (0,1), (0.5, 1), (1,1), (1, 0.5), (1, 0), (0.5, 0)]
+ch, cw = captured_image.shape[:2]
+print("ch, cw", ch, cw)
+points = [(0,0), (0,ch), (cw,ch), (cw, 0)]
 recognized_points = []
 
 
@@ -100,6 +103,7 @@ def mouseCallback(event_type, x, y, *args):
         H, x = cv2.findHomography(np.array(points), np.array(recognized_points))
         #H = find_homography(np.array(points), np.array(recognized_points))
         print("x", x, "H", H)
+        image2 = cv2.warpPerspective(captured_image, H, image.shape[:2])
         for x1, y1, x2, y2 in ((0,0,1,1), (1,0,0,1)):
             x1_, y1_, s1_ = H.dot(np.array([x1, y1, 1]))
             x2_, y2_, s2_ = H.dot(np.array([x2, y2, 1]))
@@ -110,6 +114,14 @@ def mouseCallback(event_type, x, y, *args):
             cv2.line(image, (x1_, y1_), (x2_, y2_), (0,0,0))
             cv2.line(image, (x1_+1, y1_+1), (x2_+1, y2_+1), (255,255,255))
         cv2.imshow("Video Capture", image)
+        #cv2.imshow("WarpedImage", image2)
+        for y, row in enumerate(image2):
+            for x, pixel in enumerate(row):
+                if not(pixel[0] == pixel[1] == pixel[2] == 0):
+                    image[y][x] = pixel
+        cv2.imshow("Mask", image)
+
+
 
 cv2.namedWindow("Video Capture", cv2.WINDOW_AUTOSIZE)
 cv2.imshow("Video Capture", image)

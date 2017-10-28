@@ -45,6 +45,10 @@ def capture_image(input_device="", mirror=False):
         image = cv2.imread(file_path)
         return image
 
+def capture_image_gray(*args, **kw):
+    """Same as capture_image but returns gray picture."""
+    return cv2.cvtColor(capture_image(*args, **kw), cv2.COLOR_BGR2GRAY)
+
 def max_resolution():
     """Return the maximum resolution.
 
@@ -55,6 +59,10 @@ def max_resolution():
     current = [x for x in first_line.split(",") if "current" in x][0]
     width, height = [s for s in current.split() if s.isdigit()]
     return int(width), int(height)
+
+def max_resolution_zeros():
+    res = max_resolution()
+    return np.zeros(res[::-1], np.uint8)
 
 if __name__ == "__main__":
     print("Video devices:", list_video_devices())
