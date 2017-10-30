@@ -64,6 +64,16 @@ def max_resolution_zeros():
     res = max_resolution()
     return np.zeros(res[::-1], np.uint8)
 
+def camera_or_argument_image(default_image="explanation.png"):
+    """Image from the command line argument or capture one from the camera."""
+    if len(sys.argv) > 1:
+        image_path = sys.argv[1]
+    elif list_video_devices():
+        return capture_image()
+    else:
+        image_path = default
+    return cv2.imread(image_path)
+
 if __name__ == "__main__":
     print("Video devices:", list_video_devices())
     t = time.time()

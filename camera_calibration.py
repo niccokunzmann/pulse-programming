@@ -50,6 +50,10 @@ class Calibration:
         """Fill the window with black."""
         cv2.imshow(self._window_name, self.get_resolution_zeros())
 
+    def fill_white(self):
+        """Fill the window with black."""
+        cv2.imshow(self._window_name, self.get_resolution_zeros() + 255)
+
     def record_background(self):
         """Record a background image.
 
@@ -141,7 +145,6 @@ class Calibration:
         dst = np.array(self._camera_points)
         assert len(src) == len(dst) >= 4, "Use record_point() to get more points. You need at least 4 and have {}.".format(len(dst))
         H, x = cv2.findHomography(src, dst, cv2.RANSAC)
-        print("x", x)
         self._H = H
         self._HI = np.linalg.inv(H)
         return self._H
@@ -156,8 +159,9 @@ class Calibration:
         """
         if projector_image is None:
             projector_image = np.zeros((self.height, self.width, 3), np.uint8) + 255
-        H = self.compute_matrix()
-        return cv2.warpPerspective(projector_image, H, self._background.shape[1::-1])
+        self.compute_matrix()
+        flags = cv2.WARP_INVERSE_MAP | cv2.INTER_NEAREST
+        return cv2.warpPerspective(projector_image, self._HI, self._background.shape[1::-1], flags=flags)
 
     def area_in_camera(self, projector_image=None):
         """Show the displayed area inside the camera image.
@@ -186,7 +190,8 @@ class Calibration:
         if camera_image is None:
             camera_image = capture_image()
         self.compute_matrix()
-        return cv2.warpPerspective(camera_image, self._HI, (self.width, self.height))
+        flags = cv2.WARP_INVERSE_MAP | cv2.INTER_NEAREST
+        return cv2.warpPerspective(camera_image, self._H, (self.width, self.height), flags=flags)
 
     def show_area_in_camera(self):
         """Shortcut to open a window for area_in_camera."""
@@ -227,6 +232,7 @@ class Calibration:
 if __name__ == "__main__":
     window = "Calibration"
     calibration = Calibration((1024, 768), window_name=window)
+    calibration.fill_white()
     cv2.namedWindow("Threshold", cv2.WINDOW_AUTOSIZE)
     cv2.namedWindow("Drawing", cv2.WINDOW_AUTOSIZE)
     print("Please move the window to fill the screen and press any key.")
@@ -237,7 +243,6 @@ if __name__ == "__main__":
     print("Matrix:", calibration.compute_matrix())
     print("Points:", calibration.get_points())
     calibration.show_area_in_camera()
-    MOUSE_CLICK = 1
     def capture_mouse(event_type, x, y, *args):
         x2, y2 = calibration.camera_to_projection_point((x, y))
         print("on camera {}, {} => {}, {} on projector".format(x, y, x2, y2))

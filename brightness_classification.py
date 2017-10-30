@@ -111,7 +111,10 @@ def compute_lamp_brightness(gray, x_partitions=4, y_partitions=4, debug=True):
         print("fitness", fitness(result.x), "start", fitness(START), "no lamp", fitness(NO_LAMP))
         print("ambient light", a, "lamp at", (lx, ly, abs(lz)**0.5))
 
-    assert a > 0, "We can not have a negative ambient light intensity."
+    if a < 0:
+        # We can not have a negative ambient light intensity.
+        return 0
+
     if lz != lz: # nan
         if debug:
             print("No place for the lamp?")

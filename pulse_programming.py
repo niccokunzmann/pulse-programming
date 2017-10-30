@@ -50,12 +50,14 @@ class PulseField:
     expand_element = np.array([[1,1,1],[1,1,1],[1,1,1]], np.uint8)
     gate_expand_element = np.array([[1,1,1],[1,1,0],[1,0,0]], np.uint8)
 
-    def __init__(self, program_image):
+    def __init__(self, program_image=None):
         """Create a new pulse working on an image."""
-        self.set_program_image(program_image)
-        self.reset_pulse()
+        self._was_initialized = False
+        if program_image is not None:
+            self.set_program_image(program_image)
 
-    def set_program_image(self, program_image, debug=True):
+    def set_program_image(self, program_image, debug=True,
+            blue_threshold=0.97):
         """Set the program image.
 
         The background should be white, the gates blue and the roads black.
@@ -65,13 +67,26 @@ class PulseField:
         - debug - whether to open windows with debug information.
         """
         self._program_image = program_image
-        self._parse_program_image(debug)
+        self._parse_program_image(blue_threshold)
         self._initialize_pulse_generation()
+        if not self._was_initialized:
+            self.reset_pulse()
+            self._was_initialized = True
+        if debug:
+            zeros = self.zeros()
+            not_pulse_input = cv2.bitwise_not(self._pulse_input_image)
+            r = cv2.bitwise_or(self._road_image, self._pulse_input_image)
+            g = cv2.bitwise_and(self._road_image, not_pulse_input)
+            b = cv2.bitwise_and(self._gate_image + self._road_image, not_pulse_input)
+            program = cv2.merge((b, g, r))
+            cv2.namedWindow("Program", cv2.WINDOW_AUTOSIZE)
+            cv2.imshow("Program", program)
 
-    def _parse_program_image(self, debug):
+    def _parse_program_image(self, blue_threshold):
         """Parse the program image to set the road and gates."""
         program_image = self._program_image
-        gate_image = get_blue_recognition(program_image)
+        gate_image = get_blue_recognition(program_image,
+                                          threshold=blue_threshold)
         foreground_image = get_foreground_from_BGR(program_image)
         road_image = cv2.bitwise_and(
             cv2.bitwise_not(foreground_image),
@@ -84,11 +99,6 @@ class PulseField:
 
         road_image = cv2.bitwise_and(road_image, cv2.bitwise_not(gate_image))
 
-        if debug:
-            cv2.namedWindow("road_image", cv2.WINDOW_AUTOSIZE)
-            cv2.imshow("road_image", road_image)
-            cv2.namedWindow("gate_image", cv2.WINDOW_AUTOSIZE)
-            cv2.imshow("gate_image", gate_image)
         self._gate_image = gate_image
         self._road_image = road_image
 
@@ -100,9 +110,13 @@ class PulseField:
             cv2.dilate(gate_image, self.nand_element))
         self._gate_expanded = cv2.dilate(gate_image, self.gate_expand_element)
 
+    def zeros(self):
+        """Return zeros in the resolution."""
+        return np.zeros(self._road_image.shape[:2], np.uint8)
+
     def reset_pulse(self):
         """Set the pulse state to the beginnig of the program."""
-        zeros = np.zeros(self._road_image.shape[:2], np.uint8)
+        zeros = self.zeros()
         self._down_pulse = self._right_pulse = self._road_pulse = (zeros, zeros)
         self._and_pulse = zeros
 

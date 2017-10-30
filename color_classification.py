@@ -61,16 +61,15 @@ def get_green_recognition(image, threshold=0.97):
 
 
 if __name__ == "__main__":
-    image_path = (sys.argv[1] if len(sys.argv) > 1 else "pathxxx.png")
+    from camera_image import camera_or_argument_image
 
     t = time.time()
-    image = cv2.imread(image_path)
+    image = camera_or_argument_image()
     print("read:", time.time() - t); t = time.time()
-    #image = cv2.GaussianBlur(image, (5, 5), 0)
     print("blur:", time.time() - t); t = time.time()
     DIMENSIONS = (len(image), len(image[0]))
 
-    blue_img = get_blue_recognition(image)
+    blue_img = get_blue_recognition(image, 0.57)
     print("blueness:", time.time() - t); t = time.time()
 
 
