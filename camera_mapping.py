@@ -103,8 +103,8 @@ def mouseCallback(event_type, x, y, *args):
         H, x = cv2.findHomography(np.array(points), np.array(recognized_points))
         #H = find_homography(np.array(points), np.array(recognized_points))
         print("x", x, "H", H)
-        image2 = cv2.warpPerspective(captured_image, H, image.shape[:2])
-        for x1, y1, x2, y2 in ((0,0,1,1), (1,0,0,1)):
+        image2 = cv2.warpPerspective(captured_image, H, image.shape[1::-1])
+        for x1, y1, x2, y2 in ((0,0,cw,ch), (cw,0,0,ch)):
             x1_, y1_, s1_ = H.dot(np.array([x1, y1, 1]))
             x2_, y2_, s2_ = H.dot(np.array([x2, y2, 1]))
             x1_, y1_ = x1_/s1_, y1_/s1_
