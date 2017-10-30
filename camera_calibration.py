@@ -1,5 +1,5 @@
 import cv2
-from camera_image import capture_image_gray, max_resolution
+from camera_image import *
 import numpy as np
 import random
 import time
@@ -44,7 +44,7 @@ class Calibration:
 
         The background im age is a 7bit gray recorded image.
         """
-        self._background = capture_image_gray() // 2
+        self._background = capture_image_gray()
         self._next_background_capture = time.time() + self._maximum_background_seconds
 
     def provide_current_background(self):
@@ -81,16 +81,15 @@ class Calibration:
         """Display a point and record it with the camera."""
         self.provide_current_background()
         image = self.get_resolution_zeros()
-        x = int(random.random() * self._resolution[0])
-        y = int(random.random() * self._resolution[1])
+        x = int( self._circle_radius + random.random() * (self._resolution[0] -  self._circle_radius * 2))
+        y = int( self._circle_radius + random.random() * (self._resolution[1] -  self._circle_radius * 2))
         cv2.circle(image, (x, y), self._circle_radius, 255, -1)
         cv2.imshow(self._window_name, image)
         cv2.waitKey(1)
         capture = capture_image_gray()
-        diff = capture // 2 + 128 - self._background
+        greater = cv2.compare(capture, self._background, cv2.CMP_GT)
+        diff = cv2.bitwise_and(greater, capture)
         ret, white = cv2.threshold(diff, 128, 255, cv2.THRESH_BINARY | cv2.THRESH_OTSU)
-        #cv2.imshow("Threshold", white)
-        #images.append(white)
         # TODO: evaluate: could the that connected components is faster
         count = 40
         while True:
@@ -105,6 +104,7 @@ class Calibration:
                     count //= 2
                 else:
                     break # we went too far
+        cv2.imshow("Threshold", white)
         white_positions = cv2.findNonZero(white)
         xs, ys = cv2.split(white_positions)
         px = xs.mean()
@@ -116,20 +116,50 @@ class Calibration:
     def compute_matrix(self):
         """Compute the transformation matrix."""
         if self._H is not None:
-            return
+            return self._H
         src = np.array(self._source_points)
         dst = np.array(self._destination_points)
         assert len(src) == len(dst) >= 4, "Use record_point() to get more points. You need at least 4 and have {}.".format(len(dst))
-        H, x = cv2.findHomography(src, dst)
+        H, x = cv2.findHomography(src, dst, cv2.RANSAC)
         self._H = H
+        return self._H
 
+    def get_points(self):
+        return list(zip(self._source_points, self._destination_points))
 
+    def area_in_camera(self, image=np.array([[[255,255,255]]], np.uint8)):
+        """Show the displayed area inside the camera image.
+
+        Parameters:
+        - image - the image to warp into the pespective.
+
+        This is just useful for debugging purposes.
+        """
+        captured_image = capture_image()
+        H = self.compute_matrix()
+        warped_image = cv2.warpPerspective(image, H, captured_image.shape[:2])
+        for y, row in enumerate(warped_image):
+            for x, pixel in enumerate(row):
+                if not(pixel[0] == pixel[1] == pixel[2] == 0):
+                    captured_image[y][x] = pixel
+        return captured_image
+
+    def show_area_in_camera(self):
+        """Shortcut to open a window for area_in_camera."""
+        image = self.area_in_camera()
+        window = "Capture Area - {}".format(self._window_name)
+        cv2.namedWindow(window, cv2.WINDOW_AUTOSIZE)
+        cv2.imshow(window, image)
 
 if __name__ == "__main__":
-    calibration = Calibration()
+    calibration = Calibration((1024, 768))
+    cv2.namedWindow("Threshold", cv2.WINDOW_AUTOSIZE)
     print("Please move the window to fill the screen and press any key.")
     calibration.wait_for_key_press()
-    calibration.record_points(8)
+    calibration.record_points(20)
     # calibration.camera_to_projector() # input image
     # calibration.display() show an image
+    print("Matrix:", calibration.compute_matrix())
+    print("Points:", calibration.get_points())
+    calibration.show_area_in_camera()
     calibration.wait_for_key_press()
