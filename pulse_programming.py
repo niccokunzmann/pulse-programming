@@ -102,7 +102,7 @@ class PulseField:
 
     def reset_pulse(self):
         """Set the pulse state to the beginnig of the program."""
-        zeros = np.zeros(self._road_image.shape()[:2], np.uint8)
+        zeros = np.zeros(self._road_image.shape[:2], np.uint8)
         self._down_pulse = self._right_pulse = self._road_pulse = (zeros, zeros)
         self._and_pulse = zeros
 
@@ -111,7 +111,7 @@ class PulseField:
         pulse_input = cv2.dilate(cv2.bitwise_and(
             self._pulse_input_image, cv2.bitwise_not(
                 cv2.dilate(self._and_pulse,
-                    expand_element))), expand_element)
+                    self.expand_element))), self.expand_element)
         self._road_pulse = pulse(
             self._road_pulse, self.road_pulse_element, self._road_image,
             (pulse_input, self._down_pulse[0], self._right_pulse[0]))
@@ -122,9 +122,9 @@ class PulseField:
             self._down_pulse, self.down_pulse_element, self._gate_expanded,
             (self._road_pulse[0],))
         # and pulse
-        and_input = cv2.bitwise_and(right_pulse[0], down_pulse[0])
+        and_input = cv2.bitwise_and(self._right_pulse[0], self._down_pulse[0])
         and_pulse = cv2.bitwise_or(
-            self._and_input, cv2.dilate(self._and_pulse, self.and_pulse_element))
+            and_input, cv2.dilate(self._and_pulse, self.and_pulse_element))
         self._and_pulse = cv2.bitwise_and(and_pulse, self._gate_image)
 
     def get_pulse_gray(self):
@@ -141,12 +141,12 @@ class PulseField:
 
     def get_pulse_colored(self):
         """Return the pulse image colored."""
-        gray = self.get_image_gray()
+        gray = self.get_pulse_gray()
         return cv2.cvtColor(gray, cv2.COLOR_GRAY2BGR)
 
     def get_pulse_on_program(self):
         """Return the pulse image rendered on the program image"""
-        colored = self.get_image_colored()
+        colored = self.get_pulse_colored()
         return cv2.bitwise_or(self._program_image, colored)
 
 
