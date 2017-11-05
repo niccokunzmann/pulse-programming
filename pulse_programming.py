@@ -94,8 +94,10 @@ class PulseField:
 
         gate_image = cv2.erode(gate_image, self.expand_element, iterations=self.EROSION_ITERATIONS)
         gate_image = cv2.dilate(gate_image, self.expand_element, iterations=self.DELATION_ITERATIONS)
-        road_image = cv2.dilate(road_image, self.expand_element, iterations=self.DELATION_ITERATIONS)
+        gate_image_expanded = cv2.dilate(gate_image, self.expand_element, iterations=self.DELATION_ITERATIONS)
         road_image = cv2.erode(road_image, self.expand_element, iterations=self.EROSION_ITERATIONS)
+        road_image = cv2.bitwise_and(road_image, cv2.bitwise_not(gate_image_expanded))
+        road_image = cv2.dilate(road_image, self.expand_element, iterations=self.DELATION_ITERATIONS)
 
         road_image = cv2.bitwise_and(road_image, cv2.bitwise_not(gate_image))
 
